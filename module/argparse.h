@@ -7,35 +7,85 @@
 #include <algorithm>
 #include <map>
 using namespace std;
+class argument {
+public:
+    string cArgname;//全写参数名
+    string cAliasName;//添加别名
+    string cHelp; //参数描述
+    bool bMust = false;//是否为必须 此处暂时不实现 有待考虑
+    argument();
 
-struct  argument{
-    string cAbArgname;
-    string cArgname;
-    int nDataLens;
-    string cData;
-    bool cDefault;
-    string cHelp;
-    bool has;
+    argument *add_help(string help);//添加参数描述
+    argument *add_default(string data);//添加参数默认值
+    argument *add_alias(string _argname);//添加参数别名
+    argument *set_must();//设置该参数为必须参数 _nocite是当该参数不存在时的提示
+    string &get() { return this->cData; }
+
+    void setHas() { this->bHas = true; }
+
+    void setData(string data) {
+        this->cData = data;
+        this->nDataLens = data.length();
+    }
+
+    int getLen() { return this->nDataLens; }
+
+    bool isHas() { return this->bHas; }
+
+    bool isEmpty() {
+        if (!cArgname.length())return true;
+        return false;
+    }
+
+private:
+    string cData; //参数值 未来需要改成模板
+    int nDataLens = 0; //数据长度
+    bool cDefault = false; //是否是默认值
+    bool bHas = false; //是否存在该参数
 };
 
 class argparse {
 private:
-    string cDescription;
-    argument **Arguments = new argument*[5];
-    vector<string> Argument_names;
-    int nCount=0;
-    bool bReadStatus=false;
-    vector<string> Has_Argument_Flag;
-    map<string,argument*> Argument_maps;
+    static string cProgramName; //程序名称
+    static string cDescription; //程序描述
+    static bool bReadStatus; //读取状态
+    static argument *argCursor;
+    static bool bPathParse; //是否解析文件名
+    static map<string, argument *> Argument_maps; //名称与argument指针的映射关系 名称是去掉-的参数
+    static argument *index_argument(string _argname) {
+        if (argparse::Argument_maps.find(_argname) != argparse::Argument_maps.end()) {
+            return argparse::Argument_maps[_argname];
+        } else {
+            return argparse::nullarg;
+        }
+    }
+
+    static string get_argname(string _argname) {
+        while (_argname[0] == '-')_argname.erase(_argname.begin());
+        return _argname;
+    }
+
+    static void excption();
+
 public:
-    void add_description(string help); //添加总描述
-    argparse& parse_args(int argc,char** argv); //载入argv
-    argparse& add_argument(string cAbArgname,string cArgname); //添加参数
-    argparse& add_argument(string cAbArgname,string cArgname,string cDefault); //添加参数带默认值
-    argparse& add_argument_help(string help);//添加参数描述
+    argparse();
+
+    argparse *add_description(string help); //添加总描述
+    static bool parse_args(int argc, char **argv); //载入argv
+    argument *add_argument(string cArgname); //添加参数
+    argparse *set_path_parse(bool path = true) {
+        argparse::bPathParse = path;
+        return this;
+    }
+
+    argument *get(string cArgname);
+
+    string &operator[](const string &_argname);
+
+    static argument *nullarg;
+
     ~argparse();
-    argument operator[](string _argname);
 };
 
-void checkArgs (char arg[]);
+bool checkArgs(const char *arg);
 #endif //SNACNER_ARGPARSE_H
