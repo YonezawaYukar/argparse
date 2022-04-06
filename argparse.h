@@ -6,6 +6,7 @@
 #define SNACNER_ARGPARSE_H
 #include <algorithm>
 #include <map>
+#include <string>
 using namespace std;
 class argument {
 public:
